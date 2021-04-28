@@ -7,7 +7,7 @@ db_meeting_instances = TinyDB('meeting_instances.json')
 db_eventsLog = TinyDB('eventsLog.json')
 
 # inserting data in users database
-db_users.insert({'userID': '1', 'name': 'John Collins', ' age': 21,
+db_users.insert({'userID': '1', 'name': 'John Collins', 'age': 21,
                  'gender': 'male', 'email': 'collins1@gmail.com'})
 db_users.insert({'userID': '2', 'name': 'Jack Johnson', 'age': 30,
                  'gender': 'male', 'email': 'ohnson@gmail.com'})
