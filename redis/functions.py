@@ -9,7 +9,7 @@ import pprint
 
 # connect to redis server
 ip_address = '192.168.1.3'
-client = redis.Redis(host = ip_address, port = '6379')
+client = redis.Redis(host=ip_address, port='6379')
 
 
 # connect to database files
@@ -19,7 +19,7 @@ db_meeting_instances = TinyDB('meeting_instances.json')
 db_eventsLog = TinyDB('eventsLog.json')
 
 # global variables
-eventID = 10 #global variable for eventID in database eventsLog
+eventID = 10  # global variable for eventID in database eventsLog
 
 
 def activate_meetings():
@@ -29,15 +29,17 @@ def activate_meetings():
     particular moment (meaning the current date is before the end of the instance 
     and after the start of it). Meeting instances are being activated by
     saving the meetingID inside a set in redis named @active
-    
+
     Returns: -
     """
     # iterate through all meeting instances in database @meeting_instances
     for instance in db_meeting_instances:
-        start_date = datetime.datetime.strptime(instance['fromdatetime'], '%Y-%m-%d %H:%M:%S.%f')
-        finish_date = datetime.datetime.strptime(instance['todatetime'], '%Y-%m-%d %H:%M:%S.%f')
+        start_date = datetime.datetime.strptime(
+            instance['fromdatetime'], '%Y-%m-%d %H:%M:%S.%f')
+        finish_date = datetime.datetime.strptime(
+            instance['todatetime'], '%Y-%m-%d %H:%M:%S.%f')
         # date now must be between the start and end date of the meeting instance
-        if ((start_date < datetime.datetime.now()) & (finish_date > datetime.datetime.now() )):
+        if ((start_date < datetime.datetime.now()) & (finish_date > datetime.datetime.now())):
             # add the meetingID to the redis set  @active
             client.sadd('active', instance['meetingID'])
 
@@ -53,7 +55,8 @@ def show_active_meetings():
     # iterate through all active meetingIDS
     for meeting in client.smembers('active'):
         # print for each meetingID the extended information
-        pprint.pprint(db_meetings.search(query.meetingID == meeting.decode('utf-8')))
+        pprint.pprint(db_meetings.search(
+            query.meetingID == meeting.decode('utf-8')))
 
 
 def post_message(current_meetingID, userID, message):
@@ -79,7 +82,8 @@ def post_message(current_meetingID, userID, message):
     timestamp = round(datetime2.timestamp(datetime2.now()))
     # creating the names of the list and name of the message
     list_name = current_meetingID + '_messages'
-    list_item = current_meetingID + '_message_' + str(userID) + '_' + str(timestamp)
+    list_item = current_meetingID + '_message_' + \
+        str(userID) + '_' + str(timestamp)
     # append item to list
     client.rpush(list_name, list_item)
     # create hashes of message and userID for item
@@ -103,12 +107,13 @@ def show_chat(meetingID):
 
     Returns: -
     """
-    print('Chat of meeting '+ meetingID + ' :')
-    for message  in client.lrange(meetingID+'_messages', 0 , -1):
+    print('Chat of meeting ' + meetingID + ' :')
+    for message in client.lrange(meetingID+'_messages', 0, -1):
         message_name = message.decode('utf-8')
         message_sender = client.hget(message_name, 'userID').decode('utf-8')
         message_text = client.hget(message_name, 'message').decode('utf-8')
-        print (message_sender + ': ' + message_text)
+        print(message_sender + ': ' + message_text)
+
 
 def show_user_chat(meetingID, userID):
     """
@@ -124,15 +129,15 @@ def show_user_chat(meetingID, userID):
 
     Returns: - 
     """
-    print('Messages of user '+ str(userID) + ' in meeting ' + meetingID +':')
-    for message  in client.lrange(meetingID+'_messages', 0 , -1):
+    print('Messages of user ' + str(userID) + ' in meeting ' + meetingID + ':')
+    for message in client.lrange(meetingID+'_messages', 0, -1):
         message_name = message.decode('utf-8')
         message_sender = client.hget(message_name, 'userID').decode('utf-8')
         if (int(message_sender) == userID):
             message_text = client.hget(message_name, 'message').decode('utf-8')
             timestamp = message_name[message_name.rindex('_')+1:]
             date_timestamp = datetime2.fromtimestamp(int(timestamp))
-            print (str(date_timestamp.time()) + ' : ' + message_text)
+            print(str(date_timestamp.time()) + ' : ' + message_text)
 
 
 def get_eventID():
@@ -147,15 +152,13 @@ def get_eventID():
     return(eventID)
 
 
-
-
 # test functions
 activate_meetings()
-#show_active_meetings()
+# show_active_meetings()
 #post_message('100', 4,'Hello class')
-#time.sleep(1.4)
+# time.sleep(1.4)
 #post_message('100', 1,'My name is Stef')
-#show_chat('100')
+# show_chat('100')
 show_user_chat('100', 1)
 
 # close connection to database files
