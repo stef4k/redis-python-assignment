@@ -1,2 +1,5 @@
-# Package Files #
+# Package Files
 *.json
+
+# Pycharm files
+*.idea
