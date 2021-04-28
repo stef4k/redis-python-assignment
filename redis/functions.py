@@ -3,9 +3,6 @@ from tinydb import TinyDB, Query
 import redis
 import datetime
 from datetime import datetime as datetime2
-import time
-import pprint
-
 
 # connect to redis server
 ip_address = '192.168.1.3'
@@ -51,12 +48,12 @@ def show_active_meetings():
     of the particular meetingID is printed from the database @meetings
     Returns: -
     """
-    query = Query()
     # iterate through all active meetingIDS
     for meeting in client.smembers('active'):
+        meetingID = meeting.decode('utf-8')
         # print for each meetingID the extended information
-        pprint.pprint(db_meetings.search(
-            query.meetingID == meeting.decode('utf-8')))
+        print(meetingID + '| ' + get_meeting_title(meetingID) +
+              ': ' + get_meeting_description(meetingID))
 
 
 def post_message(current_meetingID, userID, message):
@@ -90,8 +87,7 @@ def post_message(current_meetingID, userID, message):
     client.hset(list_item, 'message', message)
     client.hset(list_item, 'userID', userID)
     # insert action to eventsLog database
-    db_eventsLog.insert({'event_id': get_eventID(), 'userID': userID,
-                         'event_type': 4, 'timestamp': timestamp})
+    insert_eventLog(userID, 4, timestamp)
 
 
 def show_chat(meetingID):
@@ -107,12 +103,14 @@ def show_chat(meetingID):
 
     Returns: -
     """
-    print('Chat of meeting ' + meetingID + ' :')
+    print('Chat of meeting ' + meetingID +
+          ' :' + '\n----------------------------------------------')
     for message in client.lrange(meetingID+'_messages', 0, -1):
         message_name = message.decode('utf-8')
         message_sender = client.hget(message_name, 'userID').decode('utf-8')
         message_text = client.hget(message_name, 'message').decode('utf-8')
         print(message_sender + ': ' + message_text)
+    print('----------------------------------------------')
 
 
 def show_user_chat(meetingID, userID):
@@ -129,7 +127,8 @@ def show_user_chat(meetingID, userID):
 
     Returns: - 
     """
-    print('Messages of user ' + str(userID) + ' in meeting ' + meetingID + ':')
+    print('Messages of user ' + str(userID) + ' in meeting ' +
+          meetingID + ':' + '\n----------------------------------------------')
     for message in client.lrange(meetingID+'_messages', 0, -1):
         message_name = message.decode('utf-8')
         message_sender = client.hget(message_name, 'userID').decode('utf-8')
@@ -138,6 +137,7 @@ def show_user_chat(meetingID, userID):
             timestamp = message_name[message_name.rindex('_')+1:]
             date_timestamp = datetime2.fromtimestamp(int(timestamp))
             print(str(date_timestamp.time()) + ' : ' + message_text)
+    print('----------------------------------------------')
 
 
 def get_eventID():
@@ -152,14 +152,68 @@ def get_eventID():
     return(eventID)
 
 
+def get_meeting_title(meetingID):
+    """
+    Function that finds the title of a particular @meetingID inside the database
+    of meetings
+
+    Parameters
+    ----------
+    meetingID : string
+    Returns: a string of the title of the particular meeting
+
+    """
+    query = Query()
+    result = (db_meetings.search(query.meetingID == meetingID))
+    title = [r['title'] for r in result]
+    return (''.join(title))
+
+
+def get_meeting_description(meetingID):
+    """
+    Function that finds the description of a particular @meetingID inside the database
+    of meetings
+
+    Parameters
+    ----------
+    meetingID : string
+
+    Returns: a string of the description of the particular meeting
+    """
+    query = Query()
+    result = (db_meetings.search(query.meetingID == meetingID))
+    description = [r['description'] for r in result]
+    return (''.join(description))
+
+
+def insert_eventLog(userID, event_type, timestamp):
+    """
+    Function that inserts in the database @eventsLog a particular event
+    from a particular user @userID, of a particular @event_type and the particular
+    time it happened
+
+    Parameters
+    ----------
+    userID : int 
+    event_type : int , 1 for user joining a meeting, 2 for user leaving a meeting,
+                3 for a meeting ending, 4 for a user posting a message
+
+    timestamp : int
+
+    Returns: - 
+
+    """
+    db_eventsLog.insert({'event_id': get_eventID(), 'userID': userID,
+                         'event_type': event_type, 'timestamp': timestamp})
+
+
 # test functions
 activate_meetings()
 # show_active_meetings()
-#post_message('100', 4,'Hello class')
-# time.sleep(1.4)
-#post_message('100', 1,'My name is Stef')
-# show_chat('100')
+post_message('100', 1, 'We are good')
+show_chat('100')
 show_user_chat('100', 1)
+# print(get_meeting_title('100'))
 
 # close connection to database files
 db_users.close()
