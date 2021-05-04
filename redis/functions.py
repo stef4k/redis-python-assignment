@@ -5,7 +5,8 @@ import datetime
 from datetime import datetime as datetime2
 
 # connect to redis server
-ip_address = '192.168.1.3'
+# ip_address = '192.168.1.3'
+ip_address = '127.0.0.1'
 client = redis.Redis(host=ip_address, port='6379')
 
 
@@ -36,7 +37,7 @@ def activate_meetings():
         finish_date = datetime.datetime.strptime(
             instance['todatetime'], '%Y-%m-%d %H:%M:%S.%f')
         # date now must be between the start and end date of the meeting instance
-        if ((start_date < datetime.datetime.now()) & (finish_date > datetime.datetime.now())):
+        if (start_date < datetime.datetime.now()) & (finish_date > datetime.datetime.now()):
             # add the meetingID to the redis set  @active
             client.sadd('active', instance['meetingID'])
 
@@ -54,6 +55,25 @@ def show_active_meetings():
         # print for each meetingID the extended information
         print(meetingID + '| ' + get_meeting_title(meetingID) +
               ': ' + get_meeting_description(meetingID))
+
+
+def show_meeting_participants():
+    for meeting in db_meetings:
+        participants_naming = (meeting['title'] + '_participants').encode('utf-8')
+        client.hset('meetings', meeting['title'], participants_naming)
+
+    for participants in db_meetings:
+        participants_naming = (participants['title'] + '_participants').encode('utf-8')
+        audience = participants['audience']
+        if audience:
+            for user in audience:
+                client.sadd(participants_naming, get_user_name(user).encode('utf-8'))
+            continue
+        client.sadd(participants_naming, 'No participants')
+
+    for m in client.hkeys('meetings'):
+        print(m.decode('utf-8')+':',
+              (' | '.join([name.decode('utf-8') for name in client.smembers(client.hget('meetings', m)) ] ) ) )
 
 
 def post_message(current_meetingID, userID, message):
@@ -166,7 +186,13 @@ def get_meeting_title(meetingID):
     query = Query()
     result = (db_meetings.search(query.meetingID == meetingID))
     title = [r['title'] for r in result]
-    return (''.join(title))
+    return ''.join(title)
+
+
+def get_user_name(userID):
+    query = Query()
+    result = db_users.search(query['userID'] == str(userID))
+    return result[0]['name']
 
 
 def get_meeting_description(meetingID):
@@ -207,15 +233,29 @@ def insert_eventLog(userID, event_type, timestamp):
                          'event_type': event_type, 'timestamp': timestamp})
 
 
-# test functions
+# Quick test of functions
 activate_meetings()
 # show_active_meetings()
+
+# Show participants of every meeting
+print('---'*15, '\nParticipants of every meetings:')
+show_meeting_participants()
+print('---'*15+'\n')
+
+# Users posts messages
+post_message('100', 3, 'Hello professor')
 post_message('100', 1, 'We are good')
+
+# Shows chat of a specific meeting
 show_chat('100')
+
+# Shows all messages posted by a single user to a specific meeting
 show_user_chat('100', 1)
+
 # print(get_meeting_title('100'))
 
 # close connection to database files
+client.flushall()
 db_users.close()
 db_meetings.close()
 db_meeting_instances.close()
