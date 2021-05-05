@@ -15,7 +15,7 @@ db_users.insert({'userID': '3', 'name': 'Kate Daniels', 'age': 35,
                  'gender': 'female', 'email': 'kate91@gmail.com'})
 db_users.insert({'userID': '4', 'name': 'Ellie Dodgers', 'age': 23,
                  'gender': 'female', 'email': 'elliex@gmail.com'})
-db_users.insert({'userID': '5', 'name': 'Stef Rodrigez', 'age': 29,
+db_users.insert({'userID': '5', 'name': 'Stef Rodriguez', 'age': 29,
                  'gender': 'male', 'email': 'stef_rod@hotmail.com'})
 db_users.insert({'userID': '6', 'name': 'Nina Jackson', 'age': 18,
                  'gender': 'female', 'email': 'ninaa100@gmail.com'})

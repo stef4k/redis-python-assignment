@@ -89,7 +89,6 @@ def join_meeting(meeting_id, user_id):
     print(get_meeting_title(meeting_id), 'is not an active meeting.')
 
 
-# to be corrected
 def show_meeting_current_participants(meeting_id):
     participants = meeting_id + '_participants'
     if client.sismember('active', meeting_id):
@@ -104,9 +103,23 @@ def show_meeting_current_participants(meeting_id):
     print(get_meeting_title(meeting_id), 'is not an active meeting.')
 
 
-def end_meeting():
+def end_meeting(meeting_id):
+    if client.sismember('active', meeting_id):
+        participants = meeting_id + '_participants'
+        if client.hlen(participants) != 0:
+            for user in client.hkeys(participants).copy():
+                # update event log for the participants
+                timestamp = round(datetime2.timestamp(datetime2.now()))
+                insert_eventLog(user.decode('utf-8'), 3, timestamp)
+                client.hdel(participants, user)
 
-    pass
+        # update event log for the meeting
+        timestamp = round(datetime2.timestamp(datetime2.now()))
+        insert_eventLog(3, None, timestamp)
+        client.srem('active', meeting_id)
+        print(get_meeting_title(meeting_id), 'just ended.')
+        return
+    print(get_meeting_title(meeting_id), 'is not active at the moment.')
 
 
 def post_message(current_meetingID, userID, message):
@@ -254,7 +267,7 @@ def get_meeting_description(meetingID):
     query = Query()
     result = (db_meetings.search(query.meetingID == meetingID))
     description = [r['description'] for r in result]
-    return (''.join(description))
+    return ''.join(description)
 
 
 def insert_eventLog(userID, event_type, timestamp):
@@ -286,7 +299,7 @@ activate_meetings()
 print('---'*15)
 join_meeting('100', 2)
 join_meeting('100', 4)
-join_meeting('100', 1)
+join_meeting('300', 1)
 join_meeting('200', 5)
 join_meeting('200', 3)
 
@@ -294,23 +307,22 @@ join_meeting('200', 3)
 print('---'*15)
 show_meeting_current_participants('200')
 show_meeting_current_participants('400')
-print('---'*15+'\n')
+print('---'*15)
+
+# End a meeting
+end_meeting('200')
+end_meeting('200')
+print('---'*15)
 
 # Users posts messages
 post_message('100', 1, 'Hello')
 post_message('100', 3, 'Hello professor')
-# time.sleep(1)
-# post_message('100', 1, 'Its a me!')
-# time.sleep(0.5)
-# post_message('100', 1, 'We are good')
 
 # Shows chat of a specific meeting
 show_chat('100')
 
 # Shows all messages posted by a single user to a specific meeting
 show_user_chat('100', 1)
-
-# print(get_meeting_title('100'))
 
 # close connection to database files
 client.flushall()
