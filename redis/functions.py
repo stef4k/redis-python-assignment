@@ -77,15 +77,20 @@ def join_meeting(meeting_id, user_id):
             return
         else:
             if not client.hexists(participants, user_id):
-                client.hset(participants, user_id, 1)
+                timestamp = round(datetime2.timestamp(datetime2.now()))
+                client.hset(participants, user_id, timestamp)
                 print(get_user_name(user_id), 'just joined', get_meeting_title(meeting_id) + '!')
+
+                # update event_log
+                insert_eventLog(user_id, 1, timestamp)
             else:
                 print(get_user_name(user_id), 'can not double-join', get_meeting_title(meeting_id) + '.')
             return
     print(get_meeting_title(meeting_id), 'is not an active meeting.')
 
+
 # to be corrected
-def show_meeting_participants(meeting_id):
+def show_meeting_current_participants(meeting_id):
     meeting = get_meeting_title(meeting_id)
     participants_naming = (meeting + '_participants').encode('utf-8')
     client.hset('meetings', meeting, participants_naming)
@@ -288,9 +293,9 @@ join_meeting('100', 1)
 join_meeting('200', 5)
 
 # Show participants of every meeting
-# print('---'*15, '\nParticipants of an active meeting:')
-# show_meeting_participants('200')
-# print('---'*15+'\n')
+print('---'*15, '\nParticipants of an active meeting:')
+show_meeting_current_participants('200')
+print('---'*15+'\n')
 
 # Users posts messages
 post_message('100', 1, 'Hello')
