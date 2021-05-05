@@ -95,7 +95,7 @@ def show_meeting_current_participants(meeting_id):
         if client.hlen(participants) != 0:
             print('Participants of {meeting_title}:'.format(meeting_title=get_meeting_title(meeting_id)), end='| ')
             for user in client.hkeys(participants):
-                print(get_user_name(user.decode('utf-8')), end=' | ')
+                print(user.decode('utf-8') + '# ' + get_user_name(user.decode('utf-8')), end=' | ')
             print()
         else:
             print('Nobody participates at {meeting_title} yet.'.format(meeting_title=get_meeting_title(meeting_id)))
@@ -169,13 +169,13 @@ def show_chat(meetingID):
 
     Returns: -
     """
-    print('Chat of meeting ' + meetingID +
+    print('Chat of meeting ' + get_meeting_title(meetingID) +
           ' :' + '\n----------------------------------------------')
     for message in client.lrange(meetingID+'_messages', 0, -1):
         message_name = message.decode('utf-8')
         message_sender = client.hget(message_name, 'userID').decode('utf-8')
         message_text = client.hget(message_name, 'message').decode('utf-8')
-        print(message_sender + ': ' + message_text)
+        print(get_user_name(message_sender) + ': ' + message_text)
     print('----------------------------------------------')
 
 
@@ -193,8 +193,8 @@ def show_user_chat(meetingID, userID):
 
     Returns: - 
     """
-    print('Messages of user ' + str(userID) + ' in meeting ' +
-          meetingID + ':' + '\n----------------------------------------------')
+    print('Messages of user ' + get_user_name(userID) + ' in meeting ' +
+          get_meeting_title(meetingID) + ':' + '\n----------------------------------------------')
     for message in client.lrange(meetingID+'_messages', 0, -1):
         message_name = message.decode('utf-8')
         message_sender = client.hget(message_name, 'userID').decode('utf-8')
