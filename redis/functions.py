@@ -91,21 +91,17 @@ def join_meeting(meeting_id, user_id):
 
 # to be corrected
 def show_meeting_current_participants(meeting_id):
-    meeting = get_meeting_title(meeting_id)
-    participants_naming = (meeting + '_participants').encode('utf-8')
-    client.hset('meetings', meeting, participants_naming)
-
-    participants_naming = (meeting + '_participants').encode('utf-8')
-    audience = get_meeting_audience(meeting_id)
-    if audience:
-        for user in audience:
-            client.sadd(participants_naming, get_user_name(user).encode('utf-8'))
-
-    client.sadd(participants_naming, 'No participants')
-
-    for m in client.hkeys('meetings'):
-        print(m.decode('utf-8')+':',
-              (' | '.join([name.decode('utf-8') for name in client.smembers(client.hget('meetings', m)) ] ) ) )
+    participants = meeting_id + '_participants'
+    if client.sismember('active', meeting_id):
+        if client.hlen(participants) != 0:
+            print('Participants of {meeting_title}:'.format(meeting_title=get_meeting_title(meeting_id)), end='| ')
+            for user in client.hkeys(participants):
+                print(get_user_name(user.decode('utf-8')), end=' | ')
+            print()
+        else:
+            print('Nobody participates at {meeting_title} yet.'.format(meeting_title=get_meeting_title(meeting_id)))
+        return
+    print(get_meeting_title(meeting_id), 'is not an active meeting.')
 
 
 def end_meeting():
@@ -287,14 +283,17 @@ activate_meetings()
 # show_active_meetings()
 
 # User joins meeting
+print('---'*15)
 join_meeting('100', 2)
 join_meeting('100', 4)
 join_meeting('100', 1)
 join_meeting('200', 5)
+join_meeting('200', 3)
 
 # Show participants of every meeting
-print('---'*15, '\nParticipants of an active meeting:')
+print('---'*15)
 show_meeting_current_participants('200')
+show_meeting_current_participants('400')
 print('---'*15+'\n')
 
 # Users posts messages
