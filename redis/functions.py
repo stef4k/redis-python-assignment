@@ -57,23 +57,55 @@ def show_active_meetings():
               ': ' + get_meeting_description(meetingID))
 
 
-def show_meeting_participants():
-    for meeting in db_meetings:
-        participants_naming = (meeting['title'] + '_participants').encode('utf-8')
-        client.hset('meetings', meeting['title'], participants_naming)
+def join_meeting(meeting_id, user_id):
+    if client.sismember('active', meeting_id):
+        participants = meeting_id + '_participants'
+        # audience = get_meeting_audience(meeting_id)
+        if not get_meeting_publicity(meeting_id):
+            if int(user_id) in get_meeting_audience(meeting_id):
+                if not client.hexists(participants, user_id):
+                    timestamp = round(datetime2.timestamp(datetime2.now()))
+                    client.hset(participants, user_id, timestamp)
+                    print(get_user_name(user_id), 'just joined', get_meeting_title(meeting_id) + '!')
 
-    for participants in db_meetings:
-        participants_naming = (participants['title'] + '_participants').encode('utf-8')
-        audience = participants['audience']
-        if audience:
-            for user in audience:
-                client.sadd(participants_naming, get_user_name(user).encode('utf-8'))
-            continue
-        client.sadd(participants_naming, 'No participants')
+                    # update event_log
+                    insert_eventLog(user_id, 1, timestamp)
+                else:
+                    print(get_user_name(user_id), 'can not double-join', get_meeting_title(meeting_id) + '.')
+                return
+            print(get_user_name(user_id), 'is not in the audience of', get_meeting_title(meeting_id) + '.')
+            return
+        else:
+            if not client.hexists(participants, user_id):
+                client.hset(participants, user_id, 1)
+                print(get_user_name(user_id), 'just joined', get_meeting_title(meeting_id) + '!')
+            else:
+                print(get_user_name(user_id), 'can not double-join', get_meeting_title(meeting_id) + '.')
+            return
+    print(get_meeting_title(meeting_id), 'is not an active meeting.')
+
+# to be corrected
+def show_meeting_participants(meeting_id):
+    meeting = get_meeting_title(meeting_id)
+    participants_naming = (meeting + '_participants').encode('utf-8')
+    client.hset('meetings', meeting, participants_naming)
+
+    participants_naming = (meeting + '_participants').encode('utf-8')
+    audience = get_meeting_audience(meeting_id)
+    if audience:
+        for user in audience:
+            client.sadd(participants_naming, get_user_name(user).encode('utf-8'))
+
+    client.sadd(participants_naming, 'No participants')
 
     for m in client.hkeys('meetings'):
         print(m.decode('utf-8')+':',
               (' | '.join([name.decode('utf-8') for name in client.smembers(client.hget('meetings', m)) ] ) ) )
+
+
+def end_meeting():
+
+    pass
 
 
 def post_message(current_meetingID, userID, message):
@@ -189,6 +221,18 @@ def get_meeting_title(meetingID):
     return ''.join(title)
 
 
+def get_meeting_audience(meeting_id):
+    query = Query()
+    result = (db_meetings.search(query.meetingID == meeting_id))
+    return result[0]['audience']
+
+
+def get_meeting_publicity(meeting_id):
+    query = Query()
+    result = (db_meetings.search(query.meetingID == meeting_id))
+    return result[0]['isPublic']
+
+
 def get_user_name(userID):
     query = Query()
     result = db_users.search(query['userID'] == str(userID))
@@ -237,14 +281,24 @@ def insert_eventLog(userID, event_type, timestamp):
 activate_meetings()
 # show_active_meetings()
 
+# User joins meeting
+join_meeting('100', 2)
+join_meeting('100', 4)
+join_meeting('100', 1)
+join_meeting('200', 5)
+
 # Show participants of every meeting
-print('---'*15, '\nParticipants of every meetings:')
-show_meeting_participants()
-print('---'*15+'\n')
+# print('---'*15, '\nParticipants of an active meeting:')
+# show_meeting_participants('200')
+# print('---'*15+'\n')
 
 # Users posts messages
+post_message('100', 1, 'Hello')
 post_message('100', 3, 'Hello professor')
-post_message('100', 1, 'We are good')
+# time.sleep(1)
+# post_message('100', 1, 'Its a me!')
+# time.sleep(0.5)
+# post_message('100', 1, 'We are good')
 
 # Shows chat of a specific meeting
 show_chat('100')
