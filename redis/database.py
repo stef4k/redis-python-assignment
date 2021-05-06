@@ -57,17 +57,17 @@ db_meeting_instances.insert({'meetingID': '400', 'orderID': 2,
 
 
 # inserting data in events log database
-db_eventsLog.insert({'event_id': 1, 'userID': 1,
+db_eventsLog.insert({'event_id': 1, 'userID': '1',
                      'event_type': 1, 'timestamp': '1619298979.5193353'})
-db_eventsLog.insert({'event_id': 2, 'userID': 2,
+db_eventsLog.insert({'event_id': 2, 'userID': '2',
                      'event_type': 1, 'timestamp': '1619298968.5193353'})
-db_eventsLog.insert({'event_id': 3, 'userID': 1,
+db_eventsLog.insert({'event_id': 3, 'userID': '1',
                      'event_type': 4, 'timestamp': '1619298978.5111353'})
-db_eventsLog.insert({'event_id': 4, 'userID': 2,
+db_eventsLog.insert({'event_id': 4, 'userID': '2',
                      'event_type': 1, 'timestamp': '1619298975.5193353'})
-db_eventsLog.insert({'event_id': 5, 'userID': 4,
+db_eventsLog.insert({'event_id': 5, 'userID': '4',
                      'event_type': 1, 'timestamp': '1619298970.5193353'})
-db_eventsLog.insert({'event_id': 6, 'userID': 4,
+db_eventsLog.insert({'event_id': 6, 'userID': '4',
                      'event_type': 2, 'timestamp': '1619298978.5193353'})
 
 

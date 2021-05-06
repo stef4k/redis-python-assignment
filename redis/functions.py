@@ -83,7 +83,7 @@ def join_meeting(meeting_id, user_id):
         participants = meeting_id + '_participants'
         # audience = get_meeting_audience(meeting_id)
         if not get_meeting_publicity(meeting_id):
-            if int(user_id) in get_meeting_audience(meeting_id):
+            if user_id in get_meeting_audience(meeting_id):
                 if not client.hexists(participants, user_id):
                     timestamp = round(datetime2.timestamp(datetime2.now()))
                     client.hset(participants, user_id, timestamp)
@@ -201,7 +201,7 @@ def post_message(current_meetingID, userID, message):
     Parameters
     ----------
     current_meetingID : string
-    userID : int
+    userID : string
     message : string, the message sent
 
     Returns: -
@@ -262,7 +262,7 @@ def show_user_chat(meetingID, userID):
     Parameters
     ----------
     meetingID : string
-    userID : int
+    userID : string
 
     Returns: - 
     """
@@ -276,7 +276,7 @@ def show_user_chat(meetingID, userID):
         for message in client.lrange(meetingID+'_messages', 0, -1):
             message_name = message.decode('utf-8')
             message_sender = client.hget(message_name, 'userID').decode('utf-8')
-            if (int(message_sender) == userID):
+            if (message_sender == userID):
                 message_text = client.hget(message_name, 'message').decode('utf-8')
                 timestamp = message_name[message_name.rindex('_')+1:]
                 date_timestamp = datetime2.fromtimestamp(int(timestamp))
@@ -355,7 +355,7 @@ def insert_eventLog(userID, event_type, timestamp):
 
     Parameters
     ----------
-    userID : int 
+    userID : string 
     event_type : int , 1 for user joining a meeting, 2 for user leaving a meeting,
                 3 for a meeting ending, 4 for a user posting a message
 
@@ -465,7 +465,7 @@ while (choice != 'X') & (choice != 'x'):
         print('Press the user ID to join:')
         print_all_users()
         userID = input()
-        join_meeting(meetingID, int(userID))
+        join_meeting(meetingID, userID)
     elif (choice == '4'):
         print('Press the meeting ID to leave:')
         show_active_meetings()
@@ -473,7 +473,7 @@ while (choice != 'X') & (choice != 'x'):
         print('Press the user ID to leave:')
         show_meeting_current_participants(meetingID)
         userID = input()
-        leave_meeting(meetingID,int(userID))
+        leave_meeting(meetingID,userID)
     elif (choice == '5'):
         print('Press the meeting ID to show participants:')
         show_active_meetings()
@@ -494,7 +494,7 @@ while (choice != 'X') & (choice != 'x'):
             userID = input()
             print('Type the message:')
             message = input()
-            post_message(meetingID,int(userID),message)
+            post_message(meetingID,userID,message)
         else:
             print('Meeting ' + meetingID + ' is not active')
     elif (choice == '8'):
