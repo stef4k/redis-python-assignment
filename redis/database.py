@@ -47,7 +47,7 @@ db_meeting_instances.insert({'meetingID': '200', 'orderID': 1,
                              'todatetime': '2021-05-20 22:00:53.109391'})
 db_meeting_instances.insert({'meetingID': '300', 'orderID': 1,
                              'fromdatetime': '2021-04-22 12:00:00.109391',
-                             'todatetime': '2021-06-01 12:00:53.109391'})
+                             'todatetime': '2021-05-01 12:00:53.109391'})
 db_meeting_instances.insert({'meetingID': '400', 'orderID': 1,
                              'fromdatetime': '2021-01-01 22:59:53.109391',
                              'todatetime': '2021-01-01 23:59:53.109391'})
@@ -72,7 +72,7 @@ db_eventsLog.insert({'event_id': 6, 'userID': 4,
 
 
 # close connection to databasefiles
-db_users.close()
-db_meetings.close()
-db_meeting_instances.close()
-db_eventsLog.close()
+#db_users.close()
+#db_meetings.close()
+#db_meeting_instances.close()
+#db_eventsLog.close()
