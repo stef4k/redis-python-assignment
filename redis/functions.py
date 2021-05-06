@@ -470,10 +470,13 @@ while (choice != 'X') & (choice != 'x'):
         print('Press the meeting ID to leave:')
         show_active_meetings()
         meetingID = input()
-        print('Press the user ID to leave:')
-        show_meeting_current_participants(meetingID)
-        userID = input()
-        leave_meeting(meetingID,userID)
+        if check_meeting_active(meetingID):
+            print('Press the user ID to leave:')
+            show_meeting_current_participants(meetingID)
+            userID = input()
+            leave_meeting(meetingID,userID)
+        else:
+            print('Meeting ' + meetingID + ' is not active')
     elif (choice == '5'):
         print('Press the meeting ID to show participants:')
         show_active_meetings()
