@@ -79,7 +79,7 @@ def show_active_meetings():
 
 
 def join_meeting(meeting_id, user_id):
-    if client.sismember('active', meeting_id):
+    if check_user_exists(user_id):
         participants = meeting_id + '_participants'
         # audience = get_meeting_audience(meeting_id)
         if not get_meeting_publicity(meeting_id):
@@ -112,11 +112,11 @@ def join_meeting(meeting_id, user_id):
                 print('{user} is already participating at {meeting}.'
                       .format(user=get_user_name(user_id), meeting=get_meeting_title(meeting_id)))
             return
-    print(meeting_id + ' {meeting} is not an active meeting.'.format(meeting=get_meeting_title(meeting_id), ))
+    print('User ' + user_id + ' does not exist in database.')
 
 
 def leave_meeting(meeting_id, user_id):
-    if client.sismember('active', meeting_id):
+    if check_user_exists(user_id):
         if client.hexists(meeting_id + '_participants', user_id):
             client.hdel(meeting_id + '_participants', user_id)
 
@@ -130,7 +130,7 @@ def leave_meeting(meeting_id, user_id):
             print('{user} is not currently participating at {meeting}.'
                   .format(user=get_user_name(user_id), meeting=get_meeting_title(meeting_id)))
         return
-    print(meeting_id + ' {meeting} is not an active meeting.'.format(meeting=get_meeting_title(meeting_id)))
+    print('User ' + user_id + ' does not exist in database.')
 
 
 def show_meeting_current_participants(meeting_id):
@@ -385,6 +385,22 @@ def check_meeting_active(meetingID):
         return False
     
 
+def check_user_exists(userID):
+    """
+    Function that checks if a user with @userID exists in the database users
+
+    Parameters
+    ----------
+    userID : string
+
+    Returns: boolean
+    """
+    query = Query()
+    result = db_users.search(query.userID == userID)
+    if len(result) > 0:
+        return True
+    else:
+        return False
     
 
 def check_meeting_exists(meetingID):
@@ -462,10 +478,13 @@ while (choice != 'X') & (choice != 'x'):
         print('Press the meeting ID to join:')
         show_active_meetings()
         meetingID = input()
-        print('Press the user ID to join:')
-        print_all_users()
-        userID = input()
-        join_meeting(meetingID, userID)
+        if check_meeting_active(meetingID):
+            print('Press the user ID to join:')
+            print_all_users()
+            userID = input()
+            join_meeting(meetingID, userID)
+        else:
+            print('Meeting ' + meetingID + ' is not active')
     elif (choice == '4'):
         print('Press the meeting ID to leave:')
         show_active_meetings()
