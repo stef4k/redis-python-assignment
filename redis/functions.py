@@ -68,7 +68,7 @@ def join_meeting(meeting_id, user_id):
                     client.hset(participants, user_id, timestamp)
                     print(get_user_name(user_id), 'just joined', get_meeting_title(meeting_id) + '!')
 
-                    # update event_log
+                    # update event log
                     insert_eventLog(user_id, 1, timestamp)
                 else:
                     print(get_user_name(user_id), 'can not double-join', get_meeting_title(meeting_id) + '.')
@@ -81,12 +81,30 @@ def join_meeting(meeting_id, user_id):
                 client.hset(participants, user_id, timestamp)
                 print(get_user_name(user_id), 'just joined', get_meeting_title(meeting_id) + '!')
 
-                # update event_log
+                # update event log
                 insert_eventLog(user_id, 1, timestamp)
             else:
                 print(get_user_name(user_id), 'can not double-join', get_meeting_title(meeting_id) + '.')
             return
     print(get_meeting_title(meeting_id), 'is not an active meeting.')
+
+
+def leave_meeting(meeting_id, user_id):
+    if client.sismember('active', meeting_id):
+        if client.hexists(meeting_id + '_participants', user_id):
+            client.hdel(meeting_id + '_participants', user_id)
+
+            # update event log
+            timestamp = round(datetime2.timestamp(datetime2.now()))
+            insert_eventLog(user_id, 2, timestamp)
+            print('{user} just left {meeting}.'
+                  .format(user=get_user_name(user_id), meeting=get_meeting_title(meeting_id)))
+
+        else:
+            print('{user} is not currently participating at {meeting}.'
+                  .format(user=get_user_name(user_id), meeting=get_meeting_title(meeting_id)))
+        return
+    print('{meeting} is not an active meeting.'.format(meeting=get_meeting_title(meeting_id)))
 
 
 def show_meeting_current_participants(meeting_id):
@@ -303,7 +321,13 @@ join_meeting('300', 1)
 join_meeting('200', 5)
 join_meeting('200', 3)
 
-# Show participants of every meeting
+# User leaves meeting
+print('---'*15)
+leave_meeting('100', 5)
+leave_meeting('400', 3)
+leave_meeting('200', 3)
+
+# Show participants of a meeting
 print('---'*15)
 show_meeting_current_participants('200')
 show_meeting_current_participants('400')
