@@ -9,7 +9,6 @@ from datetime import datetime as datetime2
 ip_address = '127.0.0.1'
 client = redis.Redis(host=ip_address, port='6379')
 
-
 # connect to database files
 db_users = TinyDB('users.json')
 db_meetings = TinyDB('meetings.json')
@@ -66,27 +65,32 @@ def join_meeting(meeting_id, user_id):
                 if not client.hexists(participants, user_id):
                     timestamp = round(datetime2.timestamp(datetime2.now()))
                     client.hset(participants, user_id, timestamp)
-                    print(get_user_name(user_id), 'just joined', get_meeting_title(meeting_id) + '!')
+                    print('{user} just joined {meeting}!'
+                          .format(user=get_user_name(user_id), meeting=get_meeting_title(meeting_id)))
 
                     # update event log
                     insert_eventLog(user_id, 1, timestamp)
                 else:
-                    print(get_user_name(user_id), 'can not double-join', get_meeting_title(meeting_id) + '.')
+                    print(get_user_name(user_id), '{user} can not double-join {meeting}.'
+                          .format(user=get_user_name(user_id), meeting=get_meeting_title(meeting_id)))
                 return
-            print(get_user_name(user_id), 'is not in the audience of', get_meeting_title(meeting_id) + '.')
+            print('{user} is not in the audience of {meeting}.'
+                  .format(user=get_user_name(user_id), meeting=get_meeting_title(meeting_id)))
             return
         else:
             if not client.hexists(participants, user_id):
                 timestamp = round(datetime2.timestamp(datetime2.now()))
                 client.hset(participants, user_id, timestamp)
-                print(get_user_name(user_id), 'just joined', get_meeting_title(meeting_id) + '!')
+                print('{user} just joined {meeting}!'
+                      .format(user=get_user_name(user_id), meeting=get_meeting_title(meeting_id)))
 
                 # update event log
                 insert_eventLog(user_id, 1, timestamp)
             else:
-                print(get_user_name(user_id), 'can not double-join', get_meeting_title(meeting_id) + '.')
+                print('{user} is already participating at {meeting}.'
+                      .format(user=get_user_name(user_id), meeting=get_meeting_title(meeting_id)))
             return
-    print(get_meeting_title(meeting_id), 'is not an active meeting.')
+    print('{meeting} is not an active meeting.'.format(meeting=get_meeting_title(meeting_id), ))
 
 
 def leave_meeting(meeting_id, user_id):
@@ -118,7 +122,7 @@ def show_meeting_current_participants(meeting_id):
         else:
             print('Nobody participates at {meeting_title} yet.'.format(meeting_title=get_meeting_title(meeting_id)))
         return
-    print(get_meeting_title(meeting_id), 'is not an active meeting.')
+    print('{meeting} is not an active meeting.'.format(meeting=get_meeting_title(meeting_id)))
 
 
 def end_meeting(meeting_id):
@@ -135,7 +139,7 @@ def end_meeting(meeting_id):
         timestamp = round(datetime2.timestamp(datetime2.now()))
         insert_eventLog(3, None, timestamp)
         client.srem('active', meeting_id)
-        print(get_meeting_title(meeting_id), 'just ended.')
+        print('{meeting} just ended.'.format(meeting=get_meeting_title(meeting_id)))
         return
     print(get_meeting_title(meeting_id), 'is not active at the moment.')
 
@@ -164,7 +168,7 @@ def post_message(current_meetingID, userID, message):
     # creating the names of the list and name of the message
     list_name = current_meetingID + '_messages'
     list_item = current_meetingID + '_message_' + \
-        str(userID) + '_' + str(timestamp)
+                str(userID) + '_' + str(timestamp)
     # append item to list
     client.rpush(list_name, list_item)
     # create hashes of message and userID for item
@@ -189,7 +193,7 @@ def show_chat(meetingID):
     """
     print('Chat of meeting ' + get_meeting_title(meetingID) +
           ' :' + '\n----------------------------------------------')
-    for message in client.lrange(meetingID+'_messages', 0, -1):
+    for message in client.lrange(meetingID + '_messages', 0, -1):
         message_name = message.decode('utf-8')
         message_sender = client.hget(message_name, 'userID').decode('utf-8')
         message_text = client.hget(message_name, 'message').decode('utf-8')
@@ -213,12 +217,12 @@ def show_user_chat(meetingID, userID):
     """
     print('Messages of user ' + get_user_name(userID) + ' in meeting ' +
           get_meeting_title(meetingID) + ':' + '\n----------------------------------------------')
-    for message in client.lrange(meetingID+'_messages', 0, -1):
+    for message in client.lrange(meetingID + '_messages', 0, -1):
         message_name = message.decode('utf-8')
         message_sender = client.hget(message_name, 'userID').decode('utf-8')
         if (int(message_sender) == userID):
             message_text = client.hget(message_name, 'message').decode('utf-8')
-            timestamp = message_name[message_name.rindex('_')+1:]
+            timestamp = message_name[message_name.rindex('_') + 1:]
             date_timestamp = datetime2.fromtimestamp(int(timestamp))
             print(str(date_timestamp.time()) + ' : ' + message_text)
     print('----------------------------------------------')
@@ -233,7 +237,7 @@ def get_eventID():
     """
     global eventID
     eventID = eventID + 1
-    return(eventID)
+    return (eventID)
 
 
 def get_meeting_title(meetingID):
@@ -314,29 +318,29 @@ activate_meetings()
 # show_active_meetings()
 
 # User joins meeting
-print('---'*15)
+print('---' * 15)
 join_meeting('100', 2)
 join_meeting('100', 4)
 join_meeting('300', 1)
 join_meeting('200', 5)
-join_meeting('200', 3)
+join_meeting('200', 5)
 
 # User leaves meeting
-print('---'*15)
+print('---' * 15)
 leave_meeting('100', 5)
 leave_meeting('400', 3)
 leave_meeting('200', 3)
 
 # Show participants of a meeting
-print('---'*15)
+print('---' * 15)
 show_meeting_current_participants('200')
 show_meeting_current_participants('400')
-print('---'*15)
+print('---' * 15)
 
 # End a meeting
 end_meeting('200')
 end_meeting('200')
-print('---'*15)
+print('---' * 15)
 
 # Users posts messages
 post_message('100', 1, 'Hello')
