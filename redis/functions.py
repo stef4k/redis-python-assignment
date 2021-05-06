@@ -534,7 +534,7 @@ while (choice != 'X') & (choice != 'x'):
             print('Press the user ID to show his/her chat:')
             show_meeting_current_participants(meetingID)
             userID = input()
-            show_user_chat(meetingID, int(userID))
+            show_user_chat(meetingID, userID)
         else:
             print('Meeting ' + meetingID + ' is not active')
     time.sleep(1.5)
