@@ -117,12 +117,34 @@ def show_meeting_current_participants(meeting_id):
         if client.hlen(participants) != 0:
             print('Participants of {meeting_title}:'.format(meeting_title=get_meeting_title(meeting_id)), end='| ')
             for user in client.hkeys(participants):
-                print(user.decode('utf-8') + '# ' + get_user_name(user.decode('utf-8')), end=' | ')
+                print('#'+user.decode('utf-8'), get_user_name(user.decode('utf-8')), end=' | ')
             print()
         else:
             print('Nobody participates at {meeting_title} yet.'.format(meeting_title=get_meeting_title(meeting_id)))
         return
     print('{meeting} is not an active meeting.'.format(meeting=get_meeting_title(meeting_id)))
+
+
+def show_join_timestamp():
+    if client.scard('active') != 0:
+        for meeting in client.smembers('active'):
+            participants = meeting.decode('utf-8') + '_participants'
+            print('{meeting} has {length} participants.'
+                  .format(meeting=get_meeting_title(meeting.decode('utf-8')), length=client.hlen(participants)))
+
+            if client.hlen(participants) != 0:
+                print('\n'.join(
+                    ['#{user_id} {user_name}: joined at {timestamp}'
+                        .format(user_id=user.decode('utf-8'),
+                                user_name=get_user_name(user.decode('utf-8')),
+                                timestamp=datetime2.fromtimestamp(int(client.hget(participants, user).decode('utf-8')))
+                                )
+                     for user in client.hkeys(participants)
+                     ]))
+            print()
+        return
+
+    print('There are no active meetings at the moment.')
 
 
 def end_meeting(meeting_id):
@@ -313,36 +335,54 @@ def insert_eventLog(userID, event_type, timestamp):
                          'event_type': event_type, 'timestamp': timestamp})
 
 
+import time
+
 # Quick test of functions
+
+# Activate meetings
 activate_meetings()
-# show_active_meetings()
+
+# Show active meetings
+show_active_meetings()
 
 # User joins meeting
 print('---' * 15)
-join_meeting('100', 2)
-join_meeting('100', 4)
-join_meeting('300', 1)
-join_meeting('200', 5)
-join_meeting('200', 5)
+join_meeting('100', 2)  # simple join
+time.sleep(0.3)
+join_meeting('100', 6)  # simple join
+time.sleep(0.3)
+join_meeting('100', 4)  # not in audience
+time.sleep(0.3)
+join_meeting('200', 4)  # simple join
+time.sleep(0.3)
+join_meeting('200', 3)  # simple join
+time.sleep(0.3)
+join_meeting('300', 1)  # simple join
+time.sleep(0.3)
+join_meeting('300', 1)  # double join
+
+# Show timestamp of current participants
+print('---' * 15)
+show_join_timestamp()
 
 # User leaves meeting
 print('---' * 15)
-leave_meeting('100', 5)
-leave_meeting('400', 3)
-leave_meeting('200', 3)
+leave_meeting('100', 5)  # not participating
+leave_meeting('400', 3)  # not participating
+leave_meeting('200', 3)  # simple leave
 
 # Show participants of a meeting
 print('---' * 15)
 show_meeting_current_participants('200')
 show_meeting_current_participants('400')
-print('---' * 15)
 
 # End a meeting
-end_meeting('200')
-end_meeting('200')
 print('---' * 15)
+end_meeting('200')
+end_meeting('200')
 
 # Users posts messages
+print('---' * 15)
 post_message('100', 1, 'Hello')
 post_message('100', 3, 'Hello professor')
 
