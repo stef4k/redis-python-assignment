@@ -7,7 +7,6 @@ import time
 import os
 
 # connect to redis server
-# ip_address = '192.168.1.3'
 ip_address = '127.0.0.1'
 client = redis.Redis(host=ip_address, port='6379')
 
@@ -208,9 +207,7 @@ def post_message(current_meetingID, userID, message):
     Returns: -
 
     """
-    if not client.sismember('active', current_meetingID):
-        print('Meeting ' + current_meetingID + ' is currently not active')
-    elif not client.hget(current_meetingID+'_participants', userID):
+    if not client.hget(current_meetingID+'_participants', userID):
         print('User ' + str(userID) + ' has not joined meeting of ' +
               get_meeting_title(current_meetingID))
     else:
@@ -269,10 +266,8 @@ def show_user_chat(meetingID, userID):
 
     Returns: - 
     """
-    #meeting does not exist in database
-    if not client.sismember('active', meetingID):
-        print('Meeting ' + meetingID + ' is currently not active')
-    elif not client.hget(meetingID+'_participants', userID):
+    # meeting is not active
+    if not client.hget(meetingID+'_participants', userID):
         print('User ' + str(userID) + ' has not joined meeting of ' +
               get_meeting_title(meetingID))
     else:
@@ -373,6 +368,24 @@ def insert_eventLog(userID, event_type, timestamp):
                          'event_type': event_type, 'timestamp': timestamp})
 
 
+def check_meeting_active(meetingID):
+    """
+    Function that checks if the meeting with @meetingID is active (meaning is
+    inside the redis set @active). Returns true if meeting is active
+
+    Parameters
+    ----------
+    meetingID : string
+
+    Returns: boolean
+    """
+    if client.sismember('active', meetingID):
+        return True
+    else:
+        return False
+    
+
+    
 
 def check_meeting_exists(meetingID):
     """
@@ -431,65 +444,11 @@ def print_all_meetings():
               meeting['description'])
 
 
-
-# Quick test of functions
-"""
-# Show active meetings
-show_active_meetings()
-
-# User joins meeting
-print('---' * 15)
-join_meeting('100', 2)  # simple join
-time.sleep(0.3)
-join_meeting('100', 6)  # simple join
-time.sleep(0.3)
-join_meeting('100', 4)  # not in audience
-time.sleep(0.3)
-join_meeting('200', 4)  # simple join
-time.sleep(0.3)
-join_meeting('200', 3)  # simple join
-time.sleep(0.3)
-join_meeting('300', 1)  # simple join
-time.sleep(0.3)
-join_meeting('300', 1)  # double join
-
-# Show timestamp of current participants
-print('---' * 15)
-show_join_timestamp()
-
-# User leaves meeting
-print('---' * 15)
-leave_meeting('100', 5)  # not participating
-leave_meeting('400', 3)  # not participating
-leave_meeting('200', 3)  # simple leave
-
-# Show participants of a meeting
-print('---' * 15)
-show_meeting_current_participants('200')
-show_meeting_current_participants('400')
-
-# End a meeting
-print('---' * 15)
-end_meeting('200')
-end_meeting('200')
-
-# Users posts messages
-print('---' * 15)
-post_message('100', 1, 'Hello')
-post_message('100', 3, 'Hello professor')
-
-# Shows chat of a specific meeting
-show_chat('100')
-
-# Shows all messages posted by a single user to a specific meeting
-show_user_chat('100', 1)
-"""
-
 # Main
 print('Welcome to Redis Meeting Application')
-
 print_menu()
 choice = input()
+
 while (choice != 'X') & (choice != 'x'):
     if (choice == '1'):
         print('Press the meeting ID to activate:')
@@ -529,12 +488,15 @@ while (choice != 'X') & (choice != 'x'):
         print('Press the meeting ID to post message:')
         show_active_meetings()
         meetingID = input()
-        print('Press the user ID to post a message:')
-        show_meeting_current_participants(meetingID)
-        userID = input()
-        print('Type the message:')
-        message = input()
-        post_message(meetingID,int(userID),message)
+        if check_meeting_active(meetingID):
+            print('Press the user ID to post a message:')
+            show_meeting_current_participants(meetingID)
+            userID = input()
+            print('Type the message:')
+            message = input()
+            post_message(meetingID,int(userID),message)
+        else:
+            print('Meeting ' + meetingID + ' is not active')
     elif (choice == '8'):
         print('Press the meeting ID to show chat:')
         show_active_meetings()
@@ -546,10 +508,13 @@ while (choice != 'X') & (choice != 'x'):
         print('Press the meeting ID to show chat:')
         show_active_meetings()
         meetingID = input()
-        print('Press the user ID to show his/her chat:')
-        show_meeting_current_participants(meetingID)
-        userID = input()
-        show_user_chat(meetingID, int(userID))
+        if check_meeting_active(meetingID):
+            print('Press the user ID to show his/her chat:')
+            show_meeting_current_participants(meetingID)
+            userID = input()
+            show_user_chat(meetingID, int(userID))
+        else:
+            print('Meeting ' + meetingID + ' is not active')
     time.sleep(1.5)
     print_menu()
     choice = input()
