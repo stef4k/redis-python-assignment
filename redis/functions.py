@@ -317,7 +317,7 @@ def get_eventID():
     """
     global eventID
     eventID = eventID + 1
-    return (eventID)
+    return eventID
 
 
 def get_meeting_title(meetingID):
@@ -408,7 +408,7 @@ def check_meeting_active(meetingID):
         return True
     else:
         return False
-    
+
 
 def check_user_exists(userID):
     """
@@ -426,7 +426,7 @@ def check_user_exists(userID):
         return True
     else:
         return False
-    
+
 
 def check_meeting_exists(meetingID):
     """
@@ -500,4 +500,3 @@ def close():
     db_meetings.close()
     db_meeting_instances.close()
     db_eventsLog.close()
-
