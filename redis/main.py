@@ -72,16 +72,16 @@ while (choice != 'X') & (choice != 'x'):
             meetingID = input()
             if functions.check_meeting_exists(meetingID):
                 if functions.check_meeting_active(meetingID):
-                    print('Press the user ID to post a message:')
-                    functions.show_meeting_current_participants(meetingID)
-                    userID = input()
-                    if functions.check_user_exists(userID):
-                        print('Type the message:')
-                        message = input()
-                        functions.post_message(meetingID,userID,message)
-                    else:
-                        print('User with ID {user_id} does not exist in database.'
-                              .format(user_id=userID))
+                    if functions.show_meeting_current_participants(meetingID):
+                        print('Type the user ID to post a message:')
+                        userID = input()
+                        if functions.check_user_exists(userID):
+                            print('Type the message:')
+                            message = input()
+                            functions.post_message(meetingID, userID, message)
+                        else:
+                            print('User with ID {user_id} does not exist in database.'
+                                  .format(user_id=userID))
                 else:
                     print('Meeting ' + meetingID + ' is not active')
             else:
@@ -100,8 +100,8 @@ while (choice != 'X') & (choice != 'x'):
             meetingID = input()
             if functions.check_meeting_exists(meetingID):
                 if functions.check_meeting_active(meetingID):
-                    print('Press the user ID to show his/her chat:')
                     functions.show_meeting_current_participants(meetingID)
+                    print('Press the user ID to show his/her chat:')
                     userID = input()
                     functions.show_user_chat(meetingID, userID)
                 else:

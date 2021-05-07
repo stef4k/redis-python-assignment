@@ -13,6 +13,7 @@ db_meeting_instances = None
 db_eventsLog = None
 client = None
 
+
 def start():
     """
     Function to connect to databases and client
@@ -150,9 +151,10 @@ def show_meeting_current_participants(meeting_id):
             for user in client.hkeys(participants):
                 print('#'+user.decode('utf-8'), get_user_name(user.decode('utf-8')), end=' | ')
             print()
+            return True
         else:
             print('Nobody participates at {meeting_title} yet.'.format(meeting_title=get_meeting_title(meeting_id)))
-        return
+            return False
     print(meeting_id + ' {meeting} is not an active meeting.'.format(meeting=get_meeting_title(meeting_id)))
 
 
@@ -200,6 +202,7 @@ def end_meeting(meeting_id):
     else:
         print('Meeting with ID {meeting_id} does not exist in database.'
               .format(meeting_id=meeting_id))
+
 
 def post_message(current_meetingID, userID, message):
     """
@@ -256,13 +259,16 @@ def show_chat(meetingID):
     Returns: -
     """
     if check_meeting_exists(meetingID):
-        print('Chat of meeting ' + get_meeting_title(meetingID) +
-              ' :')
-        for message in client.lrange(meetingID+'_messages', 0, -1):
-            message_name = message.decode('utf-8')
-            message_sender = client.hget(message_name, 'userID').decode('utf-8')
-            message_text = client.hget(message_name, 'message').decode('utf-8')
-            print(get_user_name(message_sender) + ': ' + message_text)
+        if client.llen(meetingID+'_messages'):
+            print('Chat of meeting ' + get_meeting_title(meetingID) +
+                  ' :')
+            for message in client.lrange(meetingID+'_messages', 0, -1):
+                message_name = message.decode('utf-8')
+                message_sender = client.hget(message_name, 'userID').decode('utf-8')
+                message_text = client.hget(message_name, 'message').decode('utf-8')
+                print(get_user_name(message_sender) + ': ' + message_text)
+        else:
+            print('There are no messages at ' + get_meeting_title(meetingID) + '.')
     else:
         print('Meeting with ID ' + meetingID + ' not found in database.')
 
@@ -284,7 +290,7 @@ def show_user_chat(meetingID, userID):
     # meeting is not active
     if check_user_exists(userID):
         if not client.hget(meetingID+'_participants', userID):
-            print('User ' + str(userID) + ' has not joined meeting of ' +
+            print('User ' + str(userID) + ' is not participating at ' +
                   get_meeting_title(meetingID) + '.')
         else:
             print('Messages of user ' + get_user_name(userID) + ' in meeting ' +
@@ -300,6 +306,7 @@ def show_user_chat(meetingID, userID):
         return
     print('User with ID {user_id} does not exist in database.'
           .format(user_id=userID))
+
 
 def get_eventID():
     """
@@ -440,6 +447,7 @@ def check_meeting_exists(meetingID):
     else:
         return False
 
+
 def print_menu():
     """
     Functions that prints the menu of the meeting application
@@ -448,7 +456,7 @@ def print_menu():
 
     """
     print('---'*15)
-    print('\t\tMenu:\nPress:\n1: Activate a meeting instance\n' +
+    print('\t\t~ Menu ~\nPress:\n1: Activate a meeting instance\n' +
       '2: Show active meetings\n3: Join an active meeting' +
       '\n4: Leave a meeting\n5: Show meetings current participants\n' +
       '6: End a meeting\n7: Post a chat message\n' +
@@ -467,6 +475,7 @@ def print_all_users():
         print(user['userID'] + '| ' + user['name'] + ', ' + str(user['age'])\
               + ' years old')
 
+
 def print_all_meetings():
     """
     Function that prints all meeting IDs, title and description from db_meetings
@@ -476,6 +485,7 @@ def print_all_meetings():
     for meeting in db_meetings:
         print(meeting['meetingID'] + '| ' + meeting['title'] + ': ' + 
               meeting['description'])
+
 
 def close():
     """
