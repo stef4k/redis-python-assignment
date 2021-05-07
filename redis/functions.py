@@ -93,7 +93,7 @@ def join_meeting(meeting_id, user_id):
         participants = meeting_id + '_participants'
         # audience = get_meeting_audience(meeting_id)
         if not get_meeting_publicity(meeting_id):
-            if user_id in get_meeting_audience(meeting_id):
+            if get_user_email(user_id) in get_meeting_audience(meeting_id):
                 if not client.hexists(participants, user_id):
                     timestamp = round(datetime2.timestamp(datetime2.now()))
                     client.hset(participants, user_id, timestamp)
@@ -106,8 +106,11 @@ def join_meeting(meeting_id, user_id):
                     print(get_user_name(user_id), '{user} can not double-join {meeting}.'
                           .format(user=get_user_name(user_id), meeting=get_meeting_title(meeting_id)))
                 return
-            print('{user} is not in the audience of {meeting}.'
-                  .format(user=get_user_name(user_id), meeting=get_meeting_title(meeting_id)))
+            print('Email ({email}) of {user}, is not in the audience of {meeting}.'
+                  .format(email=get_user_email(user_id),
+                          user=get_user_name(user_id),
+                          meeting=get_meeting_title(meeting_id)
+                          ))
             return
         else:
             if not client.hexists(participants, user_id):
@@ -339,7 +342,7 @@ def get_meeting_title(meetingID):
 
 def get_meeting_audience(meeting_id):
     query = Query()
-    result = (db_meetings.search(query.meetingID == meeting_id))
+    result = db_meetings.search(query.meetingID == meeting_id)
     return result[0]['audience']
 
 
@@ -353,6 +356,12 @@ def get_user_name(userID):
     query = Query()
     result = db_users.search(query['userID'] == str(userID))
     return result[0]['name']
+
+
+def get_user_email(userID):
+    query = Query()
+    result = db_users.search(query['userID'] == str(userID))
+    return result[0]['email']
 
 
 def get_meeting_description(meetingID):

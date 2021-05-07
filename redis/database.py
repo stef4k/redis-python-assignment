@@ -10,7 +10,7 @@ db_eventsLog = TinyDB('eventsLog.json')
 db_users.insert({'userID': '1', 'name': 'John Collins', 'age': 21,
                  'gender': 'male', 'email': 'collins1@gmail.com'})
 db_users.insert({'userID': '2', 'name': 'Jack Johnson', 'age': 30,
-                 'gender': 'male', 'email': 'ohnson@gmail.com'})
+                 'gender': 'male', 'email': 'johnson@gmail.com'})
 db_users.insert({'userID': '3', 'name': 'Kate Daniels', 'age': 35,
                  'gender': 'female', 'email': 'kate91@gmail.com'})
 db_users.insert({'userID': '4', 'name': 'Ellie Dodgers', 'age': 23,
@@ -23,14 +23,14 @@ db_users.insert({'userID': '6', 'name': 'Nina Jackson', 'age': 18,
 # inserting data in meetings database
 db_meetings.insert({'meetingID': '100', 'title': 'Algorithms',
                     'description': 'Lecture on algorithms and data structures',
-                    'isPublic': False, 'audience': ['2', '5', '6']})
+                    'isPublic': False, 'audience': ['johnson@gmail.com', 'stef_rod@hotmail.com', 'ninaa100@gmail.com']})
 db_meetings.insert({'meetingID': '200', 'title': 'Databases',
                     'description': 'Lecture on relational databases',
                     'isPublic': True, 'audience': None})
 db_meetings.insert({'meetingID': '300', 'title': 'Machine learning',
                     'description': 'Introductory lecture on data analysis ' +
                     'and machine learning',
-                    'isPublic': False, 'audience': ['1', '2', '3', '4']})
+                    'isPublic': False, 'audience': ['collins1@gmail.com', 'johnson@gmail.com', 'kate91@gmail.com', 'elliex@gmail.com']})
 db_meetings.insert({'meetingID': '400', 'title': 'CV Guide',
                     'description': 'A guide on how to make a competitive CV',
                     'isPublic': True, 'audience': None})
