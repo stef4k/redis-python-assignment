@@ -83,6 +83,8 @@ def show_active_meetings():
               ': ' + get_meeting_description(meetingID))
     if len(client.smembers('active')) == 0:
         print('No active meetings at the moment.')
+        return False
+    return True
 
 
 def join_meeting(meeting_id, user_id):
@@ -177,23 +179,27 @@ def show_join_timestamp():
 
 
 def end_meeting(meeting_id):
-    if client.sismember('active', meeting_id):
-        participants = meeting_id + '_participants'
-        if client.hlen(participants) != 0:
-            for user in client.hkeys(participants).copy():
-                # update event log for the participants
-                timestamp = round(datetime2.timestamp(datetime2.now()))
-                insert_eventLog(user.decode('utf-8'), 3, timestamp)
-                client.hdel(participants, user)
+    if check_meeting_exists(meeting_id):
+        if client.sismember('active', meeting_id):
+            participants = meeting_id + '_participants'
+            if client.hlen(participants) != 0:
+                for user in client.hkeys(participants).copy():
+                    # update event log for the participants
+                    timestamp = round(datetime2.timestamp(datetime2.now()))
+                    insert_eventLog(user.decode('utf-8'), 3, timestamp)
+                    client.hdel(participants, user)
 
-        # update event log for the meeting
-        timestamp = round(datetime2.timestamp(datetime2.now()))
-        insert_eventLog(3, None, timestamp)
-        client.srem('active', meeting_id)
-        print('{meeting} just ended.'.format(meeting=get_meeting_title(meeting_id)))
-        return
-    print(meeting_id + ' ' + get_meeting_title(meeting_id), 'is not active at the moment.')
-
+            # update event log for the meeting
+            timestamp = round(datetime2.timestamp(datetime2.now()))
+            insert_eventLog(3, None, timestamp)
+            client.srem('active', meeting_id)
+            print('{meeting} just ended.'.format(meeting=get_meeting_title(meeting_id)))
+            return
+        print('#{m_id}{m_title} is not active at the moment.'
+              .format(m_id=meeting_id, m_title=get_meeting_title(meeting_id)))
+    else:
+        print('Meeting with ID {meeting_id} does not exist in database.'
+              .format(meeting_id=meeting_id))
 
 def post_message(current_meetingID, userID, message):
     """
