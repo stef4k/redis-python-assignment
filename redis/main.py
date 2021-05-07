@@ -62,9 +62,13 @@ while (choice != 'X') & (choice != 'x'):
             print('Press the user ID to post a message:')
             functions.show_meeting_current_participants(meetingID)
             userID = input()
-            print('Type the message:')
-            message = input()
-            functions.post_message(meetingID,userID,message)
+            if functions.check_user_exists(userID):
+                print('Type the message:')
+                message = input()
+                functions.post_message(meetingID,userID,message)
+            else:
+                print('User with ID {user_id} does not exist in database.'
+                      .format(user_id=userID))
         else:
             print('Meeting ' + meetingID + ' is not active')
     elif (choice == '8'):

@@ -119,7 +119,7 @@ def join_meeting(meeting_id, user_id):
                 print('{user} is already participating at {meeting}.'
                       .format(user=get_user_name(user_id), meeting=get_meeting_title(meeting_id)))
             return
-    print('User ' + user_id + ' does not exist in database.')
+    print('User with ID {user_id} does not exist in database.'.format(user_id=user_id))
 
 
 def leave_meeting(meeting_id, user_id):
@@ -137,7 +137,7 @@ def leave_meeting(meeting_id, user_id):
             print('{user} is not currently participating at {meeting}.'
                   .format(user=get_user_name(user_id), meeting=get_meeting_title(meeting_id)))
         return
-    print('User ' + user_id + ' does not exist in database.')
+    print('User with ID {user_id} does not exist in database.'.format(user_id=user_id))
 
 
 def show_meeting_current_participants(meeting_id):
@@ -216,7 +216,8 @@ def post_message(current_meetingID, userID, message):
     """
     if not client.hget(current_meetingID+'_participants', userID):
         print('User ' + str(userID) + ' has not joined meeting of ' +
-              get_meeting_title(current_meetingID))
+              get_meeting_title(current_meetingID) + '.')
+        return False
     else:
         # unique current timestamp
         timestamp = round(datetime2.timestamp(datetime2.now()))
@@ -231,7 +232,8 @@ def post_message(current_meetingID, userID, message):
         client.hset(list_item, 'userID', userID)
         # insert action to eventsLog database
         insert_eventLog(userID, 4, timestamp)
-        print('Successfully posted message')
+        print('Successfully posted a message!')
+        return True
 
 
 def show_chat(meetingID):
@@ -256,7 +258,7 @@ def show_chat(meetingID):
             message_text = client.hget(message_name, 'message').decode('utf-8')
             print(get_user_name(message_sender) + ': ' + message_text)
     else:
-        print('Meeting with ID ' + meetingID + ' not found in database')
+        print('Meeting with ID ' + meetingID + ' not found in database.')
 
 
 def show_user_chat(meetingID, userID):
@@ -274,21 +276,24 @@ def show_user_chat(meetingID, userID):
     Returns: - 
     """
     # meeting is not active
-    if not client.hget(meetingID+'_participants', userID):
-        print('User ' + str(userID) + ' has not joined meeting of ' +
-              get_meeting_title(meetingID))
-    else:
-        print('Messages of user ' + get_user_name(userID) + ' in meeting ' +
-              get_meeting_title(meetingID) + ':')
-        for message in client.lrange(meetingID+'_messages', 0, -1):
-            message_name = message.decode('utf-8')
-            message_sender = client.hget(message_name, 'userID').decode('utf-8')
-            if (message_sender == userID):
-                message_text = client.hget(message_name, 'message').decode('utf-8')
-                timestamp = message_name[message_name.rindex('_')+1:]
-                date_timestamp = datetime2.fromtimestamp(int(timestamp))
-                print(str(date_timestamp.time()) + ' : ' + message_text)
-
+    if check_user_exists(userID):
+        if not client.hget(meetingID+'_participants', userID):
+            print('User ' + str(userID) + ' has not joined meeting of ' +
+                  get_meeting_title(meetingID) + '.')
+        else:
+            print('Messages of user ' + get_user_name(userID) + ' in meeting ' +
+                  get_meeting_title(meetingID) + ':')
+            for message in client.lrange(meetingID+'_messages', 0, -1):
+                message_name = message.decode('utf-8')
+                message_sender = client.hget(message_name, 'userID').decode('utf-8')
+                if (message_sender == userID):
+                    message_text = client.hget(message_name, 'message').decode('utf-8')
+                    timestamp = message_name[message_name.rindex('_')+1:]
+                    date_timestamp = datetime2.fromtimestamp(int(timestamp))
+                    print(str(date_timestamp.time()) + ' : ' + message_text)
+        return
+    print('User with ID {user_id} does not exist in database.'
+          .format(user_id=userID))
 
 def get_eventID():
     """
