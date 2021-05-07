@@ -23,6 +23,11 @@ Then create the following functions storing the data in a Redis Server:
 
 Note: A meeting has audience or it is public. Also, functions with a star in the end, must also insert an event in the database eventsLog.
 
+## Installation requirements
+Install the necessary libraries using `pip`:
+
+    pip install tinydb, redis, datetime
+
 ## Running Application
 1. Open the `redis-server.exe` window-server
 2. Run the command `python main.py` from cmd
