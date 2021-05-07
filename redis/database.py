@@ -72,7 +72,7 @@ db_eventsLog.insert({'event_id': 6, 'userID': '4',
 
 
 # close connection to databasefiles
-#db_users.close()
-#db_meetings.close()
-#db_meeting_instances.close()
-#db_eventsLog.close()
+"""db_users.close()
+db_meetings.close()
+db_meeting_instances.close()
+db_eventsLog.close()"""

@@ -3,28 +3,35 @@ from tinydb import TinyDB, Query
 import redis
 import datetime
 from datetime import datetime as datetime2
-import time
-import os
-
-# connect to redis server
-ip_address = '127.0.0.1'
-client = redis.Redis(host=ip_address, port='6379')
-
-
-# check if databases exist
-if not os.path.exists('users.json'):
-    # create database
-    exec(open("database.py").read())
-else:
-    # connect to database files
-    db_users = TinyDB('users.json')
-    db_meetings = TinyDB('meetings.json')
-    db_meeting_instances = TinyDB('meeting_instances.json')
-    db_eventsLog = TinyDB('eventsLog.json')
 
 
 # global variables
 eventID = 7  # global variable for eventID in database eventsLog
+db_users = None
+db_meetings = None
+db_meeting_instances = None
+db_eventsLog = None
+client = None
+
+def start():
+    """
+    Function to connect to databases and client
+
+    Returns
+    -------
+    None.
+
+    """
+    # connect to redis server
+    ip_address = '127.0.0.1'
+    global client
+    client = redis.Redis(host=ip_address, port='6379')
+    # connect to database files
+    global db_users, db_meetings, db_meeting_instances, db_eventsLog
+    db_users = TinyDB('users.json')
+    db_meetings = TinyDB('meetings.json')
+    db_meeting_instances = TinyDB('meeting_instances.json')
+    db_eventsLog = TinyDB('eventsLog.json')
 
 
 def activate_meeting(meetingID):
@@ -459,94 +466,17 @@ def print_all_meetings():
         print(meeting['meetingID'] + '| ' + meeting['title'] + ': ' + 
               meeting['description'])
 
+def close():
+    """
+    Function to close connection to database and delete redis server inserts
 
-# Main
-print('Welcome to Redis Meeting Application')
-print_menu()
-choice = input()
+    Returns: -
 
-while (choice != 'X') & (choice != 'x'):
-    if (choice == '1'):
-        print('Press the meeting ID to activate:')
-        print_all_meetings()
-        meetingID = input()
-        activate_meeting(meetingID)
-    if (choice == '2'):
-        print('\t\tActive Meetings:')
-        show_active_meetings()
-    elif (choice == '3'):
-        print('Press the meeting ID to join:')
-        show_active_meetings()
-        meetingID = input()
-        if check_meeting_active(meetingID):
-            print('Press the user ID to join:')
-            print_all_users()
-            userID = input()
-            join_meeting(meetingID, userID)
-        else:
-            print('Meeting ' + meetingID + ' is not active')
-    elif (choice == '4'):
-        print('Press the meeting ID to leave:')
-        show_active_meetings()
-        meetingID = input()
-        if check_meeting_active(meetingID):
-            print('Press the user ID to leave:')
-            show_meeting_current_participants(meetingID)
-            userID = input()
-            leave_meeting(meetingID,userID)
-        else:
-            print('Meeting ' + meetingID + ' is not active')
-    elif (choice == '5'):
-        print('Press the meeting ID to show participants:')
-        show_active_meetings()
-        meetingID = input()
-        show_meeting_current_participants(meetingID)
-    elif (choice == '6'):
-        print('Press the meeting ID to end:')
-        show_active_meetings()
-        meetingID = input()
-        end_meeting(meetingID)
-    elif (choice == '7'):
-        print('Press the meeting ID to post message:')
-        show_active_meetings()
-        meetingID = input()
-        if check_meeting_active(meetingID):
-            print('Press the user ID to post a message:')
-            show_meeting_current_participants(meetingID)
-            userID = input()
-            print('Type the message:')
-            message = input()
-            post_message(meetingID,userID,message)
-        else:
-            print('Meeting ' + meetingID + ' is not active')
-    elif (choice == '8'):
-        print('Press the meeting ID to show chat:')
-        show_active_meetings()
-        meetingID = input()
-        show_chat(meetingID)
-    elif (choice == '9'):
-        show_join_timestamp()
-    elif (choice == '10'):
-        print('Press the meeting ID to show chat:')
-        show_active_meetings()
-        meetingID = input()
-        if check_meeting_active(meetingID):
-            print('Press the user ID to show his/her chat:')
-            show_meeting_current_participants(meetingID)
-            userID = input()
-            show_user_chat(meetingID, userID)
-        else:
-            print('Meeting ' + meetingID + ' is not active')
-    time.sleep(1.5)
-    print_menu()
-    choice = input()
+    """
+    global db_users, db_meetings, db_meeting_instances, db_eventsLog, client
+    client.flushall()
+    db_users.close()
+    db_meetings.close()
+    db_meeting_instances.close()
+    db_eventsLog.close()
 
-
-print('Thank you and goodbye!')
-
-# close connection to database files
-client.flushall()
-db_users.close()
-db_meetings.close()
-db_meeting_instances.close()
-db_eventsLog.close()
