@@ -2,4 +2,6 @@
 Assignment for the course Big Data Management Systems of 4th year spring semester and specifically Redis
 
 ## Running Application
-Run the command `python functions.py` from cmd. After, choose from the menu displayed to use the corresponding function.
+* Open the `redis-server.exe` window-server
+* Run the command `python main.py` from cmd
+* Choose from the displayed menu the corresponding function
