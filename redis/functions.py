@@ -4,7 +4,6 @@ import redis
 import datetime
 from datetime import datetime as datetime2
 
-
 # global variables
 eventID = 7  # global variable for eventID in database eventsLog
 db_users = None
@@ -21,7 +20,6 @@ def start():
     Returns
     -------
     None.
-
     """
     # connect to redis server
     ip_address = '127.0.0.1'
@@ -43,7 +41,14 @@ def activate_meeting(meetingID):
     and after the start of it). The meeting instances is being activated by
     saving the meetingID inside a set in redis named @active
 
-    Returns: -
+    Parameters
+    ----------
+    meetingID: str
+        Id of the meeting
+
+    Returns
+    -------
+    None
     """
     if not check_meeting_exists(meetingID):
         print('Meeting with ID ' + meetingID + ' not found in database')
@@ -64,7 +69,7 @@ def activate_meeting(meetingID):
                     print('Meeting instance for ' + get_meeting_title(meetingID) +
                           ' activated!')
                     return
-        print('No meeting instance for ' + get_meeting_title(meetingID) + 
+        print('No meeting instance for ' + get_meeting_title(meetingID) +
               ' planned for this moment')
 
 
@@ -74,7 +79,11 @@ def show_active_meetings():
     the redis set @active and for each different meetingID value there, the information
     of the particular meetingID is printed from the database @meetings.
     If active meetings are found in the set @active, a relative message is printed.
-    Returns: -
+
+    Returns
+    -------
+    bool
+        True if there is at least one active meeting. False, if not.
     """
     # iterate through all active meetingIDS
     for meeting in client.smembers('active'):
@@ -89,6 +98,20 @@ def show_active_meetings():
 
 
 def join_meeting(meeting_id, user_id):
+    """
+    A user joins an active meeting.
+
+    Parameters
+    ----------
+    meeting_id: str
+        Id of the meeting
+    user_id: str
+        Id of the user
+
+    Returns
+    -------
+    None
+    """
     if check_user_exists(user_id):
         participants = meeting_id + '_participants'
         # audience = get_meeting_audience(meeting_id)
@@ -129,6 +152,20 @@ def join_meeting(meeting_id, user_id):
 
 
 def leave_meeting(meeting_id, user_id):
+    """
+    A user leaves a meeting, if he already participates at it.
+
+    Parameters
+    ----------
+    meeting_id: str
+        Id of the meeting
+    user_id: str
+        Id of the user
+
+    Returns
+    -------
+    None
+    """
     if check_user_exists(user_id):
         if client.hexists(meeting_id + '_participants', user_id):
             client.hdel(meeting_id + '_participants', user_id)
@@ -147,12 +184,25 @@ def leave_meeting(meeting_id, user_id):
 
 
 def show_meeting_current_participants(meeting_id):
+    """
+    Shows all the users that are participating in a specific meeting.
+
+    Parameters
+    ----------
+    meeting_id: str
+        Id of the meeting
+
+    Returns
+    -------
+    bool
+        True, if all checks pass. False, if not.
+    """
     participants = meeting_id + '_participants'
     if client.sismember('active', meeting_id):
         if client.hlen(participants) != 0:
             print('Participants of {meeting_title}:'.format(meeting_title=get_meeting_title(meeting_id)), end='| ')
             for user in client.hkeys(participants):
-                print('#'+user.decode('utf-8'), get_user_name(user.decode('utf-8')), end=' | ')
+                print('#' + user.decode('utf-8'), get_user_name(user.decode('utf-8')), end=' | ')
             print()
             return True
         else:
@@ -162,6 +212,13 @@ def show_meeting_current_participants(meeting_id):
 
 
 def show_join_timestamp():
+    """
+    Shows all participants and the timestamp at which they joined, for all active meetings.
+
+    Returns
+    -------
+    None
+    """
     if client.scard('active') != 0:
         for meeting in client.smembers('active'):
             participants = meeting.decode('utf-8') + '_participants'
@@ -171,10 +228,10 @@ def show_join_timestamp():
             if client.hlen(participants) != 0:
                 print('\n'.join(
                     ['#{user_id} {user_name}: joined at {timestamp}'
-                        .format(user_id=user.decode('utf-8'),
-                                user_name=get_user_name(user.decode('utf-8')),
-                                timestamp=datetime2.fromtimestamp(int(client.hget(participants, user).decode('utf-8')))
-                                )
+                         .format(user_id=user.decode('utf-8'),
+                                 user_name=get_user_name(user.decode('utf-8')),
+                                 timestamp=datetime2.fromtimestamp(int(client.hget(participants, user).decode('utf-8')))
+                                 )
                      for user in client.hkeys(participants)
                      ]))
             print()
@@ -184,6 +241,18 @@ def show_join_timestamp():
 
 
 def end_meeting(meeting_id):
+    """
+    End an active meeting (and kick its participants).
+
+    Parameters
+    ----------
+    meeting_id: str
+        Id of the meeting
+
+    Returns
+    -------
+    None
+    """
     if check_meeting_exists(meeting_id):
         if client.sismember('active', meeting_id):
             participants = meeting_id + '_participants'
@@ -219,14 +288,20 @@ def post_message(current_meetingID, userID, message):
 
     Parameters
     ----------
-    current_meetingID : string
-    userID : string
-    message : string, the message sent
+    current_meetingID : str
+        Id of the current meeting
+    userID : str
+        Id of the user
+    message : str
+        The message the user sent
 
-    Returns: -
+    Returns
+    -------
+    bool
+        True, if user posts the message. False, if not.
 
     """
-    if not client.hget(current_meetingID+'_participants', userID):
+    if not client.hget(current_meetingID + '_participants', userID):
         print('User ' + str(userID) + ' has not joined meeting of ' +
               get_meeting_title(current_meetingID) + '.')
         return False
@@ -236,7 +311,7 @@ def post_message(current_meetingID, userID, message):
         # creating the names of the list and name of the message
         list_name = current_meetingID + '_messages'
         list_item = current_meetingID + '_message_' + \
-            str(userID) + '_' + str(timestamp)
+                    str(userID) + '_' + str(timestamp)
         # append item to list
         client.rpush(list_name, list_item)
         # create hashes of message and userID for item
@@ -257,15 +332,18 @@ def show_chat(meetingID):
 
     Parameters
     ----------
-    meetingID : string
+    meetingID : str
+        Id of the meeting
 
-    Returns: -
+    Returns
+    -------
+    None
     """
     if check_meeting_exists(meetingID):
-        if client.llen(meetingID+'_messages'):
+        if client.llen(meetingID + '_messages'):
             print('Chat of meeting ' + get_meeting_title(meetingID) +
                   ' :')
-            for message in client.lrange(meetingID+'_messages', 0, -1):
+            for message in client.lrange(meetingID + '_messages', 0, -1):
                 message_name = message.decode('utf-8')
                 message_sender = client.hget(message_name, 'userID').decode('utf-8')
                 message_text = client.hget(message_name, 'message').decode('utf-8')
@@ -279,31 +357,35 @@ def show_chat(meetingID):
 def show_user_chat(meetingID, userID):
     """
     Function that prints for a particular meeting and user, all of his/her 
-    chat meesages in that meeting. It iterates through the list of messages 
+    chat messages in that meeting. It iterates through the list of messages
     for that particular meeting. For each message, it checks if it was sent by
     the particular user and if so, it prints the time together with the message.
 
     Parameters
     ----------
-    meetingID : string
-    userID : string
+    meetingID : str
+        Id of the meeting
+    userID : str
+        Id of the user
 
-    Returns: - 
+    Returns
+    -------
+    None
     """
     # meeting is not active
     if check_user_exists(userID):
-        if not client.hget(meetingID+'_participants', userID):
+        if not client.hget(meetingID + '_participants', userID):
             print('User ' + str(userID) + ' is not participating at ' +
                   get_meeting_title(meetingID) + '.')
         else:
             print('Messages of user ' + get_user_name(userID) + ' in meeting ' +
                   get_meeting_title(meetingID) + ':')
-            for message in client.lrange(meetingID+'_messages', 0, -1):
+            for message in client.lrange(meetingID + '_messages', 0, -1):
                 message_name = message.decode('utf-8')
                 message_sender = client.hget(message_name, 'userID').decode('utf-8')
                 if (message_sender == userID):
                     message_text = client.hget(message_name, 'message').decode('utf-8')
-                    timestamp = message_name[message_name.rindex('_')+1:]
+                    timestamp = message_name[message_name.rindex('_') + 1:]
                     date_timestamp = datetime2.fromtimestamp(int(timestamp))
                     print(str(date_timestamp.time()) + ' : ' + message_text)
         return
@@ -316,7 +398,10 @@ def get_eventID():
     Function that returns a unique eventID used in database eventsLog
     Everytime it is called, it increases by 1 and returns a unique eventID.
 
-    Returns: integer
+    Returns
+    _______
+    int
+        Id of the event
     """
     global eventID
     eventID = eventID + 1
@@ -330,37 +415,92 @@ def get_meeting_title(meetingID):
 
     Parameters
     ----------
-    meetingID : string
-    Returns: a string of the title of the particular meeting
+    meetingID : str
+        Id of the meeting
 
+    Returns
+    -------
+    str
+        The title of the particular meeting
     """
     query = Query()
-    result = (db_meetings.search(query.meetingID == meetingID))
-    title = [r['title'] for r in result]
-    return ''.join(title)
+    result = db_meetings.search(query.meetingID == meetingID)
+    return result[0]['title']
 
 
 def get_meeting_audience(meeting_id):
+    """
+    Searches and returns the audience of a meeting, based on its id.
+
+    Parameters
+    ----------
+    meeting_id: str
+        Id of the meeting
+
+    Returns
+    -------
+    str
+       The audience of the meeting
+    """
     query = Query()
     result = db_meetings.search(query.meetingID == meeting_id)
     return result[0]['audience']
 
 
 def get_meeting_publicity(meeting_id):
+    """
+    Searches and returns if a meeting is public, based on its id.
+
+    Parameters
+    ----------
+    meeting_id: str
+        Id of the meeting
+
+    Returns
+    -------
+    bool
+       True, if meeting is public. False, if not.
+    """
     query = Query()
-    result = (db_meetings.search(query.meetingID == meeting_id))
+    result = db_meetings.search(query.meetingID == meeting_id)
     return result[0]['isPublic']
 
 
-def get_user_name(userID):
+def get_user_name(user_id):
+    """
+    Searches and returns the name of a user, based on his id.
+
+    Parameters
+    ----------
+    user_id: str
+        Id of the user
+
+    Returns
+    -------
+    str
+       The name of the user
+    """
     query = Query()
-    result = db_users.search(query['userID'] == str(userID))
+    result = db_users.search(query['userID'] == str(user_id))
     return result[0]['name']
 
 
-def get_user_email(userID):
+def get_user_email(user_id):
+    """
+    Searches and returns the email of a user, based on his id.
+
+    Parameters
+    ----------
+    user_id: str
+        Id of the user
+
+    Returns
+    -------
+    str
+       The email of the meeting
+    """
     query = Query()
-    result = db_users.search(query['userID'] == str(userID))
+    result = db_users.search(query['userID'] == str(user_id))
     return result[0]['email']
 
 
@@ -371,14 +511,17 @@ def get_meeting_description(meetingID):
 
     Parameters
     ----------
-    meetingID : string
+    meetingID : str
+        Id of the meeting
 
-    Returns: a string of the description of the particular meeting
+    Returns
+    -------
+    str
+        The description of the particular meeting
     """
     query = Query()
-    result = (db_meetings.search(query.meetingID == meetingID))
-    description = [r['description'] for r in result]
-    return ''.join(description)
+    result = db_meetings.search(query.meetingID == meetingID)
+    return result[0]['description']
 
 
 def insert_eventLog(userID, event_type, timestamp):
@@ -389,13 +532,15 @@ def insert_eventLog(userID, event_type, timestamp):
 
     Parameters
     ----------
-    userID : string 
-    event_type : int , 1 for user joining a meeting, 2 for user leaving a meeting,
-                3 for a meeting ending, 4 for a user posting a message
-
+    userID : str
+    event_type : {1, 2, 3, 4}
+        1 for user joining a meeting, 2 for user leaving a meeting,
+        3 for a meeting ending, 4 for a user posting a message
     timestamp : int
 
-    Returns: - 
+    Returns
+    -------
+    None
 
     """
     db_eventsLog.insert({'event_id': get_eventID(), 'userID': userID,
@@ -409,14 +554,15 @@ def check_meeting_active(meetingID):
 
     Parameters
     ----------
-    meetingID : string
+    meetingID : str
+        Id of the meeting
 
-    Returns: boolean
+    Returns
+    -------
+    bool
+        True, if meeting is active. False, if not.
     """
-    if client.sismember('active', meetingID):
-        return True
-    else:
-        return False
+    return True if client.sismember('active', meetingID) else False
 
 
 def check_user_exists(userID):
@@ -425,16 +571,17 @@ def check_user_exists(userID):
 
     Parameters
     ----------
-    userID : string
+    userID : str
+        Id of the user
 
-    Returns: boolean
+    Returns
+    -------
+    bool
+        True, if user exists in database. False, if not.
     """
     query = Query()
     result = db_users.search(query.userID == userID)
-    if len(result) > 0:
-        return True
-    else:
-        return False
+    return True if len(result) > 0 else False
 
 
 def check_meeting_exists(meetingID):
@@ -444,44 +591,54 @@ def check_meeting_exists(meetingID):
 
     Parameters
     ----------
-    meetingID : str that contains the meeting ID we want to check
+    meetingID : str
+        Id of the meeting
 
-    Returns: boolean
-
+    Returns
+    -------
+    bool
+        True, if meeting exists in database. False, if not.
     """
     query = Query()
     result = db_meetings.search(query.meetingID == meetingID)
-    if len(result) > 0:
-        return True
-    else:
-        return False
+    return True if len(result) > 0 else False
 
 
 def print_menu():
     """
     Functions that prints the menu of the meeting application
 
-    Returns: -
-
+    Returns
+    -------
+    None
     """
-    print('---'*15)
-    print('\t\t~ Menu ~\nPress:\n1: Activate a meeting instance\n' +
-      '2: Show active meetings\n3: Join an active meeting' +
-      '\n4: Leave a meeting\n5: Show meetings current participants\n' +
-      '6: End a meeting\n7: Post a chat message\n' +
-      '8: Show the chat of a meeting\n9: Show for active meetings when current participants joined\n' +
-      '10: Show the messages of a user in a active meeting\nX: Exit application')
-    print('---'*15)
+    print('---' * 15)
+    print('\t\t~ Menu ~\n'
+          'Press:\n'
+          '1: Activate a meeting instance\n' +
+          '2: Show active meetings\n' +
+          '3: Join an active meeting\n' +
+          '4: Leave a meeting\n' +
+          '5: Show meetings current participants\n' +
+          '6: End a meeting\n'
+          '7: Post a chat message\n' +
+          '8: Show the chat of a meeting\n'
+          '9: Show for active meetings when current participants joined\n' +
+          '10: Show the messages of a user in a active meeting\n'
+          'X: Exit application')
+    print('---' * 15)
 
-    
+
 def print_all_users():
     """
     Function that prints all users IDs, name and age from db_users
 
-    Returns: -
+    Returns
+    -------
+    None
     """
     for user in db_users:
-        print(user['userID'] + '| ' + user['name'] + ', ' + str(user['age'])\
+        print(user['userID'] + '| ' + user['name'] + ', ' + str(user['age'])
               + ' years old')
 
 
@@ -489,10 +646,12 @@ def print_all_meetings():
     """
     Function that prints all meeting IDs, title and description from db_meetings
 
-    Returns: -
+    Returns
+    -------
+    None
     """
     for meeting in db_meetings:
-        print(meeting['meetingID'] + '| ' + meeting['title'] + ': ' + 
+        print(meeting['meetingID'] + '| ' + meeting['title'] + ': ' +
               meeting['description'])
 
 
@@ -500,8 +659,9 @@ def close():
     """
     Function to close connection to database and delete redis server inserts
 
-    Returns: -
-
+    Returns
+    -------
+    None
     """
     global db_users, db_meetings, db_meeting_instances, db_eventsLog, client
     client.flushall()
