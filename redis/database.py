@@ -69,10 +69,3 @@ db_eventsLog.insert({'event_id': 5, 'userID': '4',
                      'event_type': 1, 'timestamp': '1619298970.5193353'})
 db_eventsLog.insert({'event_id': 6, 'userID': '4',
                      'event_type': 2, 'timestamp': '1619298978.5193353'})
-
-
-# close connection to databasefiles
-"""db_users.close()
-db_meetings.close()
-db_meeting_instances.close()
-db_eventsLog.close()"""

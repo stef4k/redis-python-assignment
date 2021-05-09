@@ -14,14 +14,14 @@ functions.print_menu()
 choice = input()
 
 while (choice != 'X') & (choice != 'x'):
-    if (choice == '1'):
+    if choice == '1':
         functions.print_all_meetings()
         meetingID = input('Press the meeting ID to activate it: ')
         functions.activate_meeting(meetingID)
-    if (choice == '2'):
+    elif choice == '2':
         print('\t\tActive Meetings:')
         functions.show_active_meetings()
-    elif (choice == '3'):
+    elif choice == '3':
         if functions.show_active_meetings():
             meetingID = input('Press the meeting ID to join: ')
             if functions.check_meeting_exists(meetingID):
@@ -34,7 +34,7 @@ while (choice != 'X') & (choice != 'x'):
             else:
                 print('Meeting with ID {meeting_id} does not exist in database.'
                       .format(meeting_id=meetingID))
-    elif (choice == '4'):
+    elif choice == '4':
         if functions.show_active_meetings():
             meetingID = input('Press the meeting ID to leave: ')
             if functions.check_meeting_exists(meetingID):
@@ -47,7 +47,7 @@ while (choice != 'X') & (choice != 'x'):
             else:
                 print('Meeting with ID {meeting_id} does not exist in database.'
                       .format(meeting_id=meetingID))
-    elif (choice == '5'):
+    elif choice == '5':
         if functions.show_active_meetings():
             meetingID = input('Press the meeting ID to show participants: ')
             if functions.check_meeting_exists(meetingID):
@@ -55,11 +55,11 @@ while (choice != 'X') & (choice != 'x'):
             else:
                 print('Meeting with ID {meeting_id} does not exist in database.'
                       .format(meeting_id=meetingID))
-    elif (choice == '6'):
+    elif choice == '6':
         if functions.show_active_meetings():
             meetingID = input('Press the meeting ID to end: ')
             functions.end_meeting(meetingID)
-    elif (choice == '7'):
+    elif choice == '7':
         if functions.show_active_meetings():
             meetingID = input('Press the meeting ID to post message: ')
             if functions.check_meeting_exists(meetingID):
@@ -77,13 +77,13 @@ while (choice != 'X') & (choice != 'x'):
             else:
                 print('Meeting with ID {meeting_id} does not exist in database.'
                       .format(meeting_id=meetingID))
-    elif (choice == '8'):
+    elif choice == '8':
         if functions.show_active_meetings():
             meetingID = input('Press the meeting ID to show chat: ')
             functions.show_chat(meetingID)
-    elif (choice == '9'):
+    elif choice == '9':
         functions.show_join_timestamp()
-    elif (choice == '10'):
+    elif choice == '10':
         if functions.show_active_meetings():
             meetingID = input('Press the meeting ID to show chat: ')
             if functions.check_meeting_exists(meetingID):
