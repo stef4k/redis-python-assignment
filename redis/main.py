@@ -13,7 +13,9 @@ print('Welcome to Redis Meeting Application')
 functions.print_menu()
 choice = input()
 
+# loop for menu reappearance
 while (choice != 'X') & (choice != 'x'):
+    # activate corresponding function based on input
     if choice == '1':
         functions.print_all_meetings()
         meetingID = input('Press the meeting ID to activate it: ')
@@ -102,5 +104,3 @@ while (choice != 'X') & (choice != 'x'):
 
 functions.close()
 print('Thank you and goodbye!')
-
-
