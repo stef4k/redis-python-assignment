@@ -39,9 +39,9 @@ while (choice != 'X') & (choice != 'x'):
             meetingID = input('Press the meeting ID to leave: ')
             if functions.check_meeting_exists(meetingID):
                 if functions.check_meeting_active(meetingID):
-                    functions.show_meeting_current_participants(meetingID)
-                    userID = input('Press the user ID to leave: ')
-                    functions.leave_meeting(meetingID, userID)
+                    if functions.show_meeting_current_participants(meetingID):
+                        userID = input('Press the user ID to leave: ')
+                        functions.leave_meeting(meetingID, userID)
                 else:
                     print('Meeting ' + meetingID + ' is not active.')
             else:
@@ -88,9 +88,9 @@ while (choice != 'X') & (choice != 'x'):
             meetingID = input('Press the meeting ID to show chat: ')
             if functions.check_meeting_exists(meetingID):
                 if functions.check_meeting_active(meetingID):
-                    functions.show_meeting_current_participants(meetingID)
-                    userID = input('Press the user ID to show his/her chat: ')
-                    functions.show_user_chat(meetingID, userID)
+                    if functions.show_meeting_current_participants(meetingID):
+                        userID = input('Press the user ID to show his/her chat: ')
+                        functions.show_user_chat(meetingID, userID)
                 else:
                     print('Meeting ' + meetingID + ' is not active')
             else:
